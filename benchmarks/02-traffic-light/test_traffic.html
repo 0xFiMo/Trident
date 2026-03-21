@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traffic Light State Machine Tests</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    background: #0d1117; color: #c9d1d9; padding: 24px;
+  }
+  h1 { color: #58a6ff; margin-bottom: 8px; font-size: 1.6rem; }
+  .subtitle { color: #8b949e; margin-bottom: 24px; font-size: 0.9rem; }
+  .category { margin: 20px 0 8px; font-size: 1.1rem; color: #d2a8ff; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th {
+    background: #161b22; color: #8b949e; text-align: left;
+    padding: 10px 12px; font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: 0.05em; border-bottom: 2px solid #30363d;
+  }
+  td { padding: 8px 12px; border-bottom: 1px solid #21262d; font-size: 0.85rem; }
+  tr.pass td { background: #0d1f0d; }
+  tr.fail td { background: #2d0d0d; }
+  tr.pass td:first-child { border-left: 3px solid #3fb950; }
+  tr.fail td:first-child { border-left: 3px solid #f85149; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-weight: 700; font-size: 0.75rem;
+  }
+  .badge-pass { background: #238636; color: #fff; }
+  .badge-fail { background: #da3633; color: #fff; }
+  .summary {
+    margin-top: 24px; padding: 16px 20px; border-radius: 8px;
+    font-size: 1.2rem; font-weight: 700;
+  }
+  .summary-pass { background: #238636; color: #fff; }
+  .summary-partial { background: #9e6a03; color: #fff; }
+  .summary-fail { background: #da3633; color: #fff; }
+  .detail { color: #8b949e; font-size: 0.78rem; }
+</style>
+</head>
+<body>
+<h1>Traffic Light State Machine Tests</h1>
+<p class="subtitle">18 behavioral tests validating safety invariants, timing, pedestrian logic, mode switching, and boundary conditions.</p>
+
+<div id="results"></div>
+<div id="summary"></div>
+
+<script>
+"use strict";
+
+// ============================================================================
+// REFERENCE STATE MACHINE IMPLEMENTATION
+// This is the canonical behavior. The model's solution is tested against these
+// behavioral properties, not against this exact implementation.
+// ============================================================================
+
+function createTrafficLight() {
+  const PHASES = [
+    { id: 1, ns: "green",  ew: "red",    duration: 10000, desc: "NS Green / EW Red" },
+    { id: 2, ns: "yellow", ew: "red",    duration: 3000,  desc: "NS Yellow / EW Red" },
+    { id: 3, ns: "red",    ew: "red",    duration: 2000,  desc: "All Red (buffer)" },
+    { id: 4, ns: "red",    ew: "green",  duration: 10000, desc: "EW Green / NS Red" },
+    { id: 5, ns: "red",    ew: "yellow", duration: 3000,  desc: "NS Red / EW Yellow" },
+    { id: 6, ns: "red",    ew: "red",    duration: 2000,  desc: "All Red (buffer)" },
+  ];
+
+  let mode = "normal";
+  let phaseIndex = 0;
+  let elapsed = 0;
+  let cycle = 0;
+  let flashOn = true;
+  let flashElapsed = 0;
+  let nsWalkRequested = false;
+  let ewWalkRequested = false;
+  let nsWalkActive = false;
+  let ewWalkActive = false;
+  let nsWalkPending = false;
+  let ewWalkPending = false;
+  let walkElapsed = 0;
+  const WALK_DURATION = 8000;
+
+  function getPhase() { return PHASES[phaseIndex]; }
+
+  function getState() {
+    if (mode === "emergency") {
+      return {
+        mode, phase: 0,
+        nsLight: flashOn ? "red" : "off",
+        ewLight: flashOn ? "red" : "off",
+        nsPed: "off", ewPed: "off",
+        elapsed: flashElapsed, cycle
+      };
+    }
+    if (mode === "night") {
+      return {
+        mode, phase: 0,
+        nsLight: flashOn ? "yellow" : "off",
+        ewLight: flashOn ? "yellow" : "off",
+        nsPed: "off", ewPed: "off",
+        elapsed: flashElapsed, cycle
+      };
+    }
+
+    const p = getPhase();
+    let nsLight = p.ns;
+    let ewLight = p.ew;
+    let nsPed = "stop";
+    let ewPed = "stop";
+
+    if (nsWalkActive && p.id === 1) {
+      nsLight = "red";
+      nsPed = "walk";
+    }
+    if (ewWalkActive && p.id === 4) {
+      ewLight = "red";
+      ewPed = "walk";
+    }
+
+    return {
+      mode, phase: p.id, nsLight, ewLight, nsPed, ewPed,
+      elapsed, cycle
+    };
+  }
+
+  function tick(ms) {
+    if (mode === "emergency" || mode === "night") {
+      flashElapsed += ms;
+      while (flashElapsed >= 1000) {
+        flashElapsed -= 1000;
+        flashOn = !flashOn;
+      }
+      return;
+    }
+
+    elapsed += ms;
+
+    // Handle walk phase timing within green phases
+    if (nsWalkActive && getPhase().id === 1) {
+      walkElapsed += ms;
+      if (walkElapsed >= WALK_DURATION) {
+        nsWalkActive = false;
+        walkElapsed = 0;
+      }
+    }
+    if (ewWalkActive && getPhase().id === 4) {
+      walkElapsed += ms;
+      if (walkElapsed >= WALK_DURATION) {
+        ewWalkActive = false;
+        walkElapsed = 0;
+      }
+    }
+
+    const p = getPhase();
+    while (elapsed >= p.duration) {
+      elapsed -= p.duration;
+      advancePhase();
+    }
+  }
+
+  function advancePhase() {
+    phaseIndex = (phaseIndex + 1) % 6;
+
+    // Start of NS green: activate pending NS walk
+    if (PHASES[phaseIndex].id === 1) {
+      cycle++;
+      if (nsWalkPending) {
+        nsWalkActive = true;
+        nsWalkPending = false;
+        walkElapsed = 0;
+      }
+      if (ewWalkPending) {
+        ewWalkPending = ewWalkPending; // stays pending until EW green
+      }
+    }
+    // Start of EW green: activate pending EW walk
+    if (PHASES[phaseIndex].id === 4) {
+      if (ewWalkPending) {
+        ewWalkActive = true;
+        ewWalkPending = false;
+        walkElapsed = 0;
+      }
+    }
+  }
+
+  function requestWalk(direction) {
+    if (mode !== "normal") return;
+    if (direction === "NS") nsWalkPending = true;
+    if (direction === "EW") ewWalkPending = true;
+  }
+
+  function setMode(newMode) {
+    if (newMode === mode) return;
+    mode = newMode;
+    if (mode === "normal") {
+      phaseIndex = 0;
+      elapsed = 0;
+      cycle = 0;
+      flashOn = true;
+      flashElapsed = 0;
+      nsWalkActive = false;
+      ewWalkActive = false;
+    } else {
+      flashOn = true;
+      flashElapsed = 0;
+    }
+  }
+
+  function reset() {
+    mode = "normal";
+    phaseIndex = 0;
+    elapsed = 0;
+    cycle = 0;
+    flashOn = true;
+    flashElapsed = 0;
+    nsWalkRequested = false;
+    ewWalkRequested = false;
+    nsWalkActive = false;
+    ewWalkActive = false;
+    nsWalkPending = false;
+    ewWalkPending = false;
+    walkElapsed = 0;
+  }
+
+  return { getState, tick, requestWalk, setMode, reset };
+}
+
+
+// ============================================================================
+// TEST FRAMEWORK
+// ============================================================================
+
+const results = [];
+
+function assert(condition, msg) {
+  if (!condition) throw new Error(msg || "Assertion failed");
+}
+
+function runTest(category, name, fn) {
+  let expected = "", actual = "", passed = false;
+  try {
+    const result = fn();
+    expected = result.expected;
+    actual = result.actual;
+    passed = result.passed !== undefined ? result.passed : (expected === actual);
+  } catch (e) {
+    expected = "no error";
+    actual = e.message;
+    passed = false;
+  }
+  results.push({ category, name, expected, actual, passed });
+}
+
+
+// ============================================================================
+// SAFETY TESTS (3)
+// ============================================================================
+
+runTest("Safety", "NS and EW never both green simultaneously", function() {
+  const tl = createTrafficLight();
+  let violation = null;
+  // Run through 3 full cycles (90 seconds) checking every 100ms
+  for (let t = 0; t < 90000; t += 100) {
+    tl.tick(100);
+    const s = tl.getState();
+    if (s.nsLight === "green" && s.ewLight === "green") {
+      violation = `Both green at t=${t}ms`;
+      break;
+    }
+  }
+  return {
+    expected: "No simultaneous green",
+    actual: violation || "No simultaneous green",
+    passed: violation === null
+  };
+});
+
+runTest("Safety", "During yellow, opposite direction must be red", function() {
+  const tl = createTrafficLight();
+  let violation = null;
+  for (let t = 0; t < 90000; t += 100) {
+    tl.tick(100);
+    const s = tl.getState();
+    if (s.nsLight === "yellow" && s.ewLight !== "red") {
+      violation = `NS yellow but EW=${s.ewLight} at t=${t}ms`;
+      break;
+    }
+    if (s.ewLight === "yellow" && s.nsLight !== "red") {
+      violation = `EW yellow but NS=${s.nsLight} at t=${t}ms`;
+      break;
+    }
+  }
+  return {
+    expected: "Opposite always red during yellow",
+    actual: violation || "Opposite always red during yellow",
+    passed: violation === null
+  };
+});
+
+runTest("Safety", "All-red buffer exists between direction changes", function() {
+  const tl = createTrafficLight();
+  let prevNS = null, prevEW = null;
+  let sawBuffer = false;
+  let violation = null;
+
+  // Track transitions: when one direction goes from non-red to allowing opposite green,
+  // there must be a phase where both are red
+  let lastNonRedNS = 0, lastNonRedEW = 0;
+  let bothRedSeen = false;
+
+  for (let t = 0; t < 60000; t += 50) {
+    tl.tick(50);
+    const s = tl.getState();
+
+    if (s.nsLight !== "red" || s.ewLight !== "red") {
+      if (s.nsLight !== "red" && s.ewLight !== "red") {
+        violation = `No all-red buffer: NS=${s.nsLight}, EW=${s.ewLight} at t=${t}ms`;
+        break;
+      }
+    }
+
+    // Check that before any green, we had an all-red phase
+    if (prevNS !== null) {
+      // NS was red, now green -> EW must have been red for a buffer period
+      if (prevNS === "red" && s.nsLight === "green" && !bothRedSeen && t > 1000) {
+        // First time is ok (initial state)
+      }
+      if (prevEW === "red" && s.ewLight === "green" && !bothRedSeen && t > 1000) {
+        // Check we had all-red before
+      }
+    }
+
+    if (s.nsLight === "red" && s.ewLight === "red" && s.mode === "normal") {
+      bothRedSeen = true;
+      sawBuffer = true;
+    }
+    if (s.nsLight !== "red" || s.ewLight !== "red") {
+      bothRedSeen = false;
+    }
+
+    prevNS = s.nsLight;
+    prevEW = s.ewLight;
+  }
+
+  return {
+    expected: "All-red buffer present between changes",
+    actual: violation || (sawBuffer ? "All-red buffer present between changes" : "No buffer detected"),
+    passed: violation === null && sawBuffer
+  };
+});
+
+
+// ============================================================================
+// TIMING TESTS (4)
+// ============================================================================
+
+runTest("Timing", "Green duration is 10 seconds (+/- 100ms)", function() {
+  const tl = createTrafficLight();
+  // NS starts green. Tick until it's no longer green.
+  let greenDuration = 0;
+  const s0 = tl.getState();
+  if (s0.nsLight !== "green") {
+    return { expected: "~10000ms", actual: "Initial state not NS green", passed: false };
+  }
+
+  for (let t = 0; t < 20000; t += 10) {
+    tl.tick(10);
+    const s = tl.getState();
+    if (s.nsLight === "green") {
+      greenDuration += 10;
+    } else {
+      break;
+    }
+  }
+
+  const tolerance = Math.abs(greenDuration - 10000);
+  return {
+    expected: "10000ms (+/- 100ms)",
+    actual: `${greenDuration}ms (delta: ${tolerance}ms)`,
+    passed: tolerance <= 100
+  };
+});
+
+runTest("Timing", "Yellow duration is 3 seconds (+/- 100ms)", function() {
+  const tl = createTrafficLight();
+  // Advance past green (10s)
+  tl.tick(10000);
+  const s0 = tl.getState();
+  if (s0.nsLight !== "yellow") {
+    return { expected: "~3000ms", actual: `After 10s, NS=${s0.nsLight} (expected yellow)`, passed: false };
+  }
+
+  let yellowDuration = 0;
+  for (let t = 0; t < 10000; t += 10) {
+    tl.tick(10);
+    const s = tl.getState();
+    if (s.nsLight === "yellow") {
+      yellowDuration += 10;
+    } else {
+      break;
+    }
+  }
+
+  const tolerance = Math.abs(yellowDuration - 3000);
+  return {
+    expected: "3000ms (+/- 100ms)",
+    actual: `${yellowDuration}ms (delta: ${tolerance}ms)`,
+    passed: tolerance <= 100
+  };
+});
+
+runTest("Timing", "All-red buffer is 2 seconds (+/- 100ms)", function() {
+  const tl = createTrafficLight();
+  // Advance to first all-red: after green(10s) + yellow(3s) = 13s
+  tl.tick(13000);
+  const s0 = tl.getState();
+  if (!(s0.nsLight === "red" && s0.ewLight === "red")) {
+    return {
+      expected: "~2000ms",
+      actual: `At 13s: NS=${s0.nsLight}, EW=${s0.ewLight} (expected both red)`,
+      passed: false
+    };
+  }
+
+  let bufferDuration = 0;
+  for (let t = 0; t < 10000; t += 10) {
+    tl.tick(10);
+    const s = tl.getState();
+    if (s.nsLight === "red" && s.ewLight === "red") {
+      bufferDuration += 10;
+    } else {
+      break;
+    }
+  }
+
+  const tolerance = Math.abs(bufferDuration - 2000);
+  return {
+    expected: "2000ms (+/- 100ms)",
+    actual: `${bufferDuration}ms (delta: ${tolerance}ms)`,
+    passed: tolerance <= 100
+  };
+});
+
+runTest("Timing", "Full cycle time is 30 seconds (+/- 200ms)", function() {
+  const tl = createTrafficLight();
+  // A full cycle: 10+3+2+10+3+2 = 30s
+  // After 30s we should be back at NS green (start of cycle 2)
+  const phases = [];
+  let lastPhase = tl.getState().phase;
+
+  // Find when cycle increments
+  let cycleTime = 0;
+  const startCycle = tl.getState().cycle;
+
+  for (let t = 0; t < 60000; t += 10) {
+    tl.tick(10);
+    cycleTime += 10;
+    const s = tl.getState();
+    if (s.cycle > startCycle) {
+      break;
+    }
+  }
+
+  // Cycle increments at start of next NS green, which is at 30s
+  const tolerance = Math.abs(cycleTime - 30000);
+  return {
+    expected: "30000ms (+/- 200ms)",
+    actual: `${cycleTime}ms (delta: ${tolerance}ms)`,
+    passed: tolerance <= 200
+  };
+});
+
+
+// ============================================================================
+// PEDESTRIAN TESTS (4)
+// ============================================================================
+
+runTest("Pedestrian", "Button press schedules walk in next cycle", function() {
+  const tl = createTrafficLight();
+  // Press NS walk during current NS green
+  tl.requestWalk("NS");
+
+  // Should NOT activate walk in current phase
+  const s0 = tl.getState();
+  const currentPed = s0.nsPed;
+
+  // Advance to next full cycle (30s to complete current, then check phase 1)
+  tl.tick(30000);
+  const s1 = tl.getState();
+
+  return {
+    expected: "Walk scheduled for next cycle",
+    actual: s1.nsPed === "walk" ? "Walk active in next cycle" : `nsPed=${s1.nsPed} in next cycle`,
+    passed: s1.nsPed === "walk"
+  };
+});
+
+runTest("Pedestrian", "Walk phase: vehicle red + pedestrian walk (8s)", function() {
+  const tl = createTrafficLight();
+  tl.requestWalk("NS");
+
+  // Advance to next cycle start (30s)
+  tl.tick(30000);
+
+  // Check walk is active: NS should be red (vehicles stop), nsPed should be walk
+  const s = tl.getState();
+  const walkActive = s.nsPed === "walk" && s.nsLight === "red";
+
+  // Advance 8 seconds, walk should end
+  tl.tick(8000);
+  const s2 = tl.getState();
+  const walkEnded = s2.nsPed === "stop";
+
+  return {
+    expected: "Walk active (veh red + ped walk), ends after 8s",
+    actual: `Walk active: ${walkActive}, ended after 8s: ${walkEnded}`,
+    passed: walkActive && walkEnded
+  };
+});
+
+runTest("Pedestrian", "No button press = no walk phase", function() {
+  const tl = createTrafficLight();
+  let walkSeen = false;
+
+  // Run 2 full cycles without pressing button
+  for (let t = 0; t < 60000; t += 100) {
+    tl.tick(100);
+    const s = tl.getState();
+    if (s.nsPed === "walk" || s.ewPed === "walk") {
+      walkSeen = true;
+      break;
+    }
+  }
+
+  return {
+    expected: "No walk phase occurs",
+    actual: walkSeen ? "Walk phase observed without button press" : "No walk phase occurs",
+    passed: !walkSeen
+  };
+});
+
+runTest("Pedestrian", "Button during current green takes effect next cycle", function() {
+  const tl = createTrafficLight();
+
+  // We're in NS green. Press walk for NS at 5s into green.
+  tl.tick(5000);
+  tl.requestWalk("NS");
+
+  // Check current phase: walk should NOT be active yet
+  const s0 = tl.getState();
+  const notActiveNow = s0.nsPed !== "walk";
+
+  // Complete this cycle and check next
+  tl.tick(25000); // finish remaining cycle
+  const s1 = tl.getState();
+  const activeNext = s1.nsPed === "walk";
+
+  return {
+    expected: "Not active now, active next cycle",
+    actual: `Current: nsPed=${s0.nsPed}, Next cycle: nsPed=${s1.nsPed}`,
+    passed: notActiveNow && activeNext
+  };
+});
+
+
+// ============================================================================
+// MODE SWITCHING TESTS (3)
+// ============================================================================
+
+runTest("Mode Switching", "Normal to Emergency: all flash red", function() {
+  const tl = createTrafficLight();
+  tl.tick(5000); // advance a bit
+  tl.setMode("emergency");
+
+  // Check flashing behavior over 3 seconds
+  let sawRed = false, sawOff = false;
+  for (let t = 0; t < 3000; t += 100) {
+    tl.tick(100);
+    const s = tl.getState();
+    if (s.nsLight === "red" && s.ewLight === "red") sawRed = true;
+    if (s.nsLight === "off" && s.ewLight === "off") sawOff = true;
+    // Should never see green or yellow
+    if (s.nsLight === "green" || s.nsLight === "yellow" ||
+        s.ewLight === "green" || s.ewLight === "yellow") {
+      return {
+        expected: "Flash red only",
+        actual: `Saw non-red/off: NS=${s.nsLight}, EW=${s.ewLight}`,
+        passed: false
+      };
+    }
+  }
+
+  return {
+    expected: "Flashing red (red and off alternating)",
+    actual: `Red seen: ${sawRed}, Off seen: ${sawOff}`,
+    passed: sawRed && sawOff
+  };
+});
+
+runTest("Mode Switching", "Normal to Night: all flash yellow", function() {
+  const tl = createTrafficLight();
+  tl.tick(5000);
+  tl.setMode("night");
+
+  let sawYellow = false, sawOff = false;
+  for (let t = 0; t < 3000; t += 100) {
+    tl.tick(100);
+    const s = tl.getState();
+    if (s.nsLight === "yellow" && s.ewLight === "yellow") sawYellow = true;
+    if (s.nsLight === "off" && s.ewLight === "off") sawOff = true;
+    if (s.nsLight === "green" || s.nsLight === "red" ||
+        s.ewLight === "green" || s.ewLight === "red") {
+      return {
+        expected: "Flash yellow only",
+        actual: `Saw unexpected: NS=${s.nsLight}, EW=${s.ewLight}`,
+        passed: false
+      };
+    }
+  }
+
+  return {
+    expected: "Flashing yellow (yellow and off alternating)",
+    actual: `Yellow seen: ${sawYellow}, Off seen: ${sawOff}`,
+    passed: sawYellow && sawOff
+  };
+});
+
+runTest("Mode Switching", "Emergency/Night to Normal: resumes from Phase 1", function() {
+  const tl = createTrafficLight();
+  tl.tick(15000); // mid-cycle
+
+  tl.setMode("emergency");
+  tl.tick(5000);
+  tl.setMode("normal");
+
+  const s = tl.getState();
+  const resumedCorrectly = s.mode === "normal" && s.phase === 1 &&
+                           s.nsLight === "green" && s.ewLight === "red";
+
+  // Also test night mode
+  const tl2 = createTrafficLight();
+  tl2.tick(15000);
+  tl2.setMode("night");
+  tl2.tick(5000);
+  tl2.setMode("normal");
+  const s2 = tl2.getState();
+  const nightResumed = s2.mode === "normal" && s2.phase === 1;
+
+  return {
+    expected: "Resumes at Phase 1 (NS green, EW red)",
+    actual: `Emergency->Normal: phase=${s.phase} NS=${s.nsLight} EW=${s.ewLight}; Night->Normal: phase=${s2.phase}`,
+    passed: resumedCorrectly && nightResumed
+  };
+});
+
+
+// ============================================================================
+// BOUNDARY TESTS (4)
+// ============================================================================
+
+runTest("Boundary", "Rapid button presses (debounce / no crash)", function() {
+  const tl = createTrafficLight();
+  let error = null;
+
+  try {
+    // Hammer the button 100 times
+    for (let i = 0; i < 100; i++) {
+      tl.requestWalk("NS");
+      tl.requestWalk("EW");
+    }
+    tl.tick(1000);
+    const s = tl.getState();
+    // Should still be operational
+    if (!s.mode || !s.nsLight) {
+      error = "State corrupted after rapid presses";
+    }
+  } catch (e) {
+    error = e.message;
+  }
+
+  return {
+    expected: "No crash, state remains valid",
+    actual: error || "No crash, state remains valid",
+    passed: error === null
+  };
+});
+
+runTest("Boundary", "Button during emergency mode is ignored", function() {
+  const tl = createTrafficLight();
+  tl.setMode("emergency");
+  tl.requestWalk("NS");
+  tl.requestWalk("EW");
+
+  // Return to normal
+  tl.setMode("normal");
+
+  // Run a full cycle - no walk should appear
+  let walkSeen = false;
+  for (let t = 0; t < 35000; t += 100) {
+    tl.tick(100);
+    const s = tl.getState();
+    if (s.nsPed === "walk" || s.ewPed === "walk") {
+      walkSeen = true;
+      break;
+    }
+  }
+
+  return {
+    expected: "Walk requests ignored during emergency",
+    actual: walkSeen ? "Walk appeared (requests not ignored)" : "Walk requests ignored during emergency",
+    passed: !walkSeen
+  };
+});
+
+runTest("Boundary", "Quick mode toggle back and forth", function() {
+  const tl = createTrafficLight();
+  let error = null;
+
+  try {
+    tl.tick(5000);
+    tl.setMode("emergency");
+    tl.tick(500);
+    tl.setMode("normal");
+    tl.tick(500);
+    tl.setMode("night");
+    tl.tick(500);
+    tl.setMode("emergency");
+    tl.tick(500);
+    tl.setMode("normal");
+    tl.tick(500);
+
+    const s = tl.getState();
+    if (s.mode !== "normal") {
+      error = `Expected normal mode, got ${s.mode}`;
+    }
+    if (!["green", "yellow", "red"].includes(s.nsLight)) {
+      error = `Invalid NS light: ${s.nsLight}`;
+    }
+  } catch (e) {
+    error = e.message;
+  }
+
+  return {
+    expected: "Stable state after rapid toggles",
+    actual: error || "Stable state after rapid toggles",
+    passed: error === null
+  };
+});
+
+runTest("Boundary", "Initial state is correct (NS green, EW red)", function() {
+  const tl = createTrafficLight();
+  const s = tl.getState();
+
+  const correct = s.mode === "normal" &&
+                  s.phase === 1 &&
+                  s.nsLight === "green" &&
+                  s.ewLight === "red" &&
+                  s.nsPed === "stop" &&
+                  s.ewPed === "stop" &&
+                  s.cycle === 0;
+
+  return {
+    expected: "mode=normal, phase=1, NS=green, EW=red, peds=stop, cycle=0",
+    actual: `mode=${s.mode}, phase=${s.phase}, NS=${s.nsLight}, EW=${s.ewLight}, nsPed=${s.nsPed}, ewPed=${s.ewPed}, cycle=${s.cycle}`,
+    passed: correct
+  };
+});
+
+
+// ============================================================================
+// RENDER RESULTS
+// ============================================================================
+
+(function renderResults() {
+  const container = document.getElementById("results");
+  const summaryDiv = document.getElementById("summary");
+
+  let currentCategory = null;
+  let html = "";
+  let passCount = 0;
+  const total = results.length;
+
+  for (const r of results) {
+    if (r.category !== currentCategory) {
+      if (currentCategory !== null) html += "</tbody></table>";
+      currentCategory = r.category;
+      html += `<div class="category">${currentCategory}</div>`;
+      html += `<table><thead><tr>
+        <th style="width:28%">Test</th>
+        <th style="width:28%">Expected</th>
+        <th style="width:28%">Actual</th>
+        <th style="width:16%">Result</th>
+      </tr></thead><tbody>`;
+    }
+
+    if (r.passed) passCount++;
+    const cls = r.passed ? "pass" : "fail";
+    const badge = r.passed
+      ? '<span class="badge badge-pass">PASS</span>'
+      : '<span class="badge badge-fail">FAIL</span>';
+
+    html += `<tr class="${cls}">
+      <td>${r.name}</td>
+      <td class="detail">${r.expected}</td>
+      <td class="detail">${r.actual}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }
+  html += "</tbody></table>";
+  container.innerHTML = html;
+
+  let summaryClass = "summary-fail";
+  if (passCount === total) summaryClass = "summary-pass";
+  else if (passCount > 0) summaryClass = "summary-partial";
+
+  summaryDiv.innerHTML = `<div class="summary ${summaryClass}">
+    ${passCount} / ${total} tests passed
+  </div>`;
+})();
+</script>
+</body>
+</html>
