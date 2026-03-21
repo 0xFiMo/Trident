@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Trident Design Review — Multi-Platform Installer
-# https://github.com/anthropic-community/trident
+# https://github.com/0xFiMo/trident
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_SRC="$SCRIPT_DIR/skills/trident"
@@ -215,5 +215,5 @@ echo "    /tri apply <task-slug>     Implement with Three Strikes"
 echo "    /tri status                Show active and completed tasks"
 echo "    /tri archive <task-slug>   Archive completed review"
 echo ""
-echo "  Docs: https://github.com/anthropic-community/trident"
+echo "  Docs: https://github.com/0xFiMo/trident"
 echo ""

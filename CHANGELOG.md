@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-03-22
+
+### Fixed
+- `install.sh` had wrong GitHub URL (pointed to anthropic-community instead of 0xFiMo)
+
 ## [1.0.0] - 2026-03-22
 
 ### Summary
