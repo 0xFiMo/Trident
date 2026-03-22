@@ -26,9 +26,12 @@ The installer auto-detects your platform and asks which to set up.
 ### Option B: Claude Code (manual)
 
 ```bash
-# Skill
-mkdir -p ~/.claude/skills/trident
+# Skill + templates + prompts + reference
+mkdir -p ~/.claude/skills/trident/{templates,prompts,reference}
 cp /tmp/trident/skills/trident/SKILL.md ~/.claude/skills/trident/
+cp /tmp/trident/skills/trident/templates/*.md ~/.claude/skills/trident/templates/
+cp /tmp/trident/skills/trident/prompts/*.md ~/.claude/skills/trident/prompts/
+cp /tmp/trident/skills/trident/reference/*.md ~/.claude/skills/trident/reference/
 
 # Heartbeat script
 mkdir -p ~/.claude/skills/trident/scripts
@@ -52,9 +55,12 @@ cp /tmp/trident/commands/tri/archive.md ~/.claude/commands/tri/
 ### Option C: OpenCode (manual)
 
 ```bash
-# Skill
-mkdir -p ~/.config/opencode/skills/trident
+# Skill + templates + prompts + reference
+mkdir -p ~/.config/opencode/skills/trident/{templates,prompts,reference}
 cp /tmp/trident/skills/trident/SKILL.md ~/.config/opencode/skills/trident/
+cp /tmp/trident/skills/trident/templates/*.md ~/.config/opencode/skills/trident/templates/
+cp /tmp/trident/skills/trident/prompts/*.md ~/.config/opencode/skills/trident/prompts/
+cp /tmp/trident/skills/trident/reference/*.md ~/.config/opencode/skills/trident/reference/
 
 # Heartbeat script
 mkdir -p ~/.config/opencode/skills/trident/scripts

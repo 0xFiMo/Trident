@@ -27,7 +27,7 @@ Extract the subcommand from the user's input:
 
 - **Do NOT ask the user to run a command** — you ARE running it right now
 - **Do NOT explain the workflow** — EXECUTE it
-- **Auto-slugify** for `/tri new`: "fix intrusion FSM false positive" becomes `fix-intrusion-fsm-false-positive`
+- **Auto-slugify** for `/tri new`: "fix login timeout on slow networks" becomes `fix-login-timeout-on-slow-networks`
 - **Auto-select** for `/tri apply` and `/tri archive`: if only one task matches the required status, use it without asking
 - Internal `.md` files (generator.md, discriminator.md) MUST be in English
 - User-facing output (reports, summaries, todos) MUST match the user's language

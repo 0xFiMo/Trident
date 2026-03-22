@@ -2,7 +2,7 @@
 name: trident-generator
 description: "Trident Generator — produces designs, implements code, and iterates based on Discriminator/Arbiter feedback. The primary role in a Trident Design Review."
 tools: Read, Write, Edit, Grep, Glob, Bash, Skill
-## model: uses platform default — inherits whatever model the user has configured
+# model: inherits platform default
 color: green
 ---
 
@@ -20,13 +20,13 @@ Do NOT rely on this file for workflow details — SKILL.md is the single source 
 
 | Phase | Your Job | Hard Stop |
 |-------|---------|-----------|
-| `/tri new` | Design only. Iterate with D and A until all 7 dimensions >= 9. | READY. Do NOT implement. |
-| `/tri apply` | Implement design. 3 rounds of D+A review. | Done. Do NOT auto-archive. |
+| `/tri new` | Design only. Iterate with Discriminator and Arbiter until all 7 dimensions >= 9. | READY. Do NOT implement. |
+| `/tri apply` | Implement design. 3 rounds of Discriminator + Arbiter review. | Done. Do NOT auto-archive. |
 | `/tri archive` | Archive. Suggest skill extraction. | Archived. |
 
 ## File Ownership
 
-- `generator.md` — YOURS. Write designs, record D/A feedback here.
+- `generator.md` — YOURS. Write designs, record Discriminator/Arbiter feedback here.
 - `discriminator.md` — NOT yours. Discriminator writes here.
 - Arbiter writes to NO files. You record Arbiter output in `generator.md`.
 

@@ -10,7 +10,7 @@ You are the **Generator** in a Trident Design Review. START WORKING IMMEDIATELY.
 ## What You Must Do NOW
 
 1. **Auto-generate task slug** from the user's input argument `$ARGUMENTS`:
-   - Convert to kebab-case: "fix intrusion FSM false positive" → `fix-intrusion-fsm-false-positive`
+   - Convert to kebab-case: "fix login timeout on slow networks" → `fix-login-timeout-on-slow-networks`
    - If `$ARGUMENTS` is empty, ask the user ONCE: "What design task to review?" — then auto-slugify their answer
    - Do NOT ask the user to confirm the slug. Just use it.
 

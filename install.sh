@@ -98,7 +98,14 @@ copy_skill() {
     local dest="$1"
     mkdir -p "$dest"
     cp "$SKILL_SRC/SKILL.md" "$dest/SKILL.md"
-    ok "Skill → $dest/"
+    # Copy subdirectories (templates, prompts, reference)
+    for subdir in templates prompts reference; do
+        if [ -d "$SKILL_SRC/$subdir" ]; then
+            mkdir -p "$dest/$subdir"
+            cp "$SKILL_SRC/$subdir"/*.md "$dest/$subdir/"
+        fi
+    done
+    ok "Skill → $dest/ (with templates, prompts, reference)"
 }
 
 copy_agents() {

@@ -5,8 +5,37 @@ All notable changes to this project will be documented in this file.
 ## [1.0.2] - 2026-03-22
 
 ### Changed
-- Removed hardcoded model from all agent definitions (Generator, Discriminator, Arbiter)
-- All three roles now inherit the platform's default model — works with any model the user configures
+- SKILL.md split into core (405 lines) + on-demand subdirectories (templates/, prompts/, reference/) — 81% reduction in initial load
+- All three roles (Generator, Discriminator, Arbiter) now have Bash tool access — independent build & verify
+- Model removed from agent frontmatter — inherits platform default
+- Discriminator and Arbiter MUST read actual source files and run code — "I read the code" is not sufficient
+- Discriminator and Arbiter use generator.md `User Language` field instead of guessing from context
+- Verification Fallback: Level 1 (run it) → Level 2 (review evidence) → Level 3 (code review only)
+- install.sh now copies templates/, prompts/, reference/ subdirectories
+
+### Added
+- `templates/generator-template.md` — includes "User Request (verbatim)" and "User Language" fields
+- `templates/discriminator-template.md` — Discriminator knowledge base template
+- `templates/apply-log-template.md` — round log template
+- `prompts/discriminator-first.md` — first round prompt with inline MUST FIX rules + alignment check
+- `prompts/discriminator-continuation.md` — continuation prompt with score regression rule
+- `prompts/arbiter-design.md` — design phase prompt with user request verification
+- `prompts/arbiter-apply.md` — apply phase prompt (Rounds 1-2 + Round 3 collaborative)
+- `reference/heartbeat.md` — platform-agnostic heartbeat invocation + timeout recovery
+- `reference/session-recovery.md` — Discriminator session recovery procedure
+- Handoff Protocol: standardized what Generator must/must not include in D/A prompts (< 200 lines)
+- File Size Control: generator.md max 2 versions, working files max 300 lines
+- Model name displayed in progress tracking when firing Discriminator/Arbiter
+- MiniMax M2.7 weather animation demo in README
+- `trident-generator.md` agent definition
+
+### Fixed
+- Privacy: removed .claude/ directory from repo, added to .gitignore
+- Privacy: replaced project-specific slug examples with generic ones
+- Agent frontmatter: `## model:` (invalid) → `# model:` (valid YAML comment)
+- Discriminator agent: "Pass 3" → "Round 3"
+- All remaining G/D/A abbreviations replaced with full role names (31 instances)
+- Arbiter language rule: "detect from conversation" → use generator.md User Language
 
 ## [1.0.1] - 2026-03-22
 

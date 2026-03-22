@@ -171,6 +171,15 @@ xychart-beta
 
 > [Full benchmark data with reproduction steps →](benchmarks/)
 
+### See It In Action
+
+Weather animation built with `MiniMax M2.7` — left is the original code, right is after Trident optimization:
+
+<!-- TODO: Replace with GitHub-hosted video URL after upload via Issue -->
+<p align="center">
+  <a href="docs/asset/trident_weather_compare.mp4">Click to watch the comparison video</a>
+</p>
+
 ---
 
 ## How It Works
@@ -314,6 +323,7 @@ And if you're feeling generous, buy me a coffee:
 - **Three Strikes:** [Three-strikes law](https://en.wikipedia.org/wiki/Three-strikes_law) — borrowed from baseball ("three strikes and you're out"), codified in law as automatic escalation after three offenses. Rooted in the Chinese proverb 事不過三 ("things shall not exceed three"), popularized by Wu Cheng'en's *[Journey to the West](https://en.wikipedia.org/wiki/Journey_to_the_West)* (c. 1592) — where Sun Wukong's battles famously follow a three-attempt pattern. The proverb teaches perseverance through three tries, but also the wisdom to escalate when three attempts aren't enough. Trident applies this: three rounds of review, then the human decides.
 - **Triforce:** [Triforce](https://en.wikipedia.org/wiki/Triforce) — three golden triangles representing Power, Wisdom, and Courage that must be in balance. In Trident: `Generator` (creates), `Discriminator` (evaluates), `Arbiter` (balances).
 - **Kimi K2.5:** [Kimi K2.5](https://www.kimi.com/blog/kimi-k2-5) by [Moonshot AI](https://www.moonshot.ai/) — the model used in our benchmark experiments.
+- **MiniMax M2.7:** [MiniMax M2.7](https://www.minimax.io/) by MiniMax — the model used in the weather animation demo.
 ---
 ## License
 
