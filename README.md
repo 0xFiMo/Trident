@@ -175,10 +175,7 @@ xychart-beta
 
 Weather animation built with `MiniMax M2.7` — left is the original code, right is after Trident optimization:
 
-<!-- TODO: Replace with GitHub-hosted video URL after upload via Issue -->
-<p align="center">
-  <a href="docs/asset/trident_weather_compare.mp4">Click to watch the comparison video</a>
-</p>
+https://github.com/0xFiMo/Trident/raw/main/docs/asset/trident_weather_compare.mp4
 
 ---
 
