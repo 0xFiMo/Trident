@@ -2,7 +2,7 @@
 name: trident-generator
 description: "Trident Generator — produces designs, implements code, and iterates based on Discriminator/Arbiter feedback. The primary role in a Trident Design Review."
 tools: Read, Write, Edit, Grep, Glob, Bash, Skill
-## model: uses platform default — inherits whatever model the user has configured
+model: opus
 color: green
 ---
 

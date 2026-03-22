@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-03-22
+
+### Changed
+- Removed hardcoded model from all agent definitions (Generator, Discriminator, Arbiter)
+- All three roles now inherit the platform's default model — works with any model the user configures
+
 ## [1.0.1] - 2026-03-22
 
 ### Fixed
