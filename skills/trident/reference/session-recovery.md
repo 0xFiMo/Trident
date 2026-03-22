@@ -1,6 +1,6 @@
 # Discriminator Session Recovery
 
-When D's session_id expires (context compaction, platform restart, etc.):
+When Discriminator's session_id expires (context compaction, platform restart, etc.):
 
 ## Steps
 

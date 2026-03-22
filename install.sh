@@ -9,6 +9,7 @@ SKILL_SRC="$SCRIPT_DIR/skills/trident"
 AGENTS_SRC="$SCRIPT_DIR/agents"
 COMMANDS_SRC="$SCRIPT_DIR/commands/tri"
 SCRIPTS_SRC="$SCRIPT_DIR/scripts"
+VERSION=$(grep -m1 '## \[' "$SCRIPT_DIR/CHANGELOG.md" 2>/dev/null | sed 's/.*\[\(.*\)\].*/\1/')
 
 # Colors
 RED='\033[0;31m'
@@ -23,8 +24,8 @@ warn()  { echo -e "${YELLOW}[warn]${NC}  $1"; }
 err()   { echo -e "${RED}[error]${NC} $1"; }
 
 echo ""
-echo "  Trident Design Review — Installer"
-echo "  Adversarial design review for AI coding agents."
+echo -e "  Trident Design Review — Installer (${GREEN}v${VERSION:-unknown}${NC})"
+echo "  One agent skill. Three adversarial minds."
 echo ""
 
 # ─── Platform Selection ──────────────────────────────────────────
@@ -214,7 +215,8 @@ fi
 # ─── Summary ────────────────────────────────────────────────────
 
 echo ""
-echo "  Done! Run again anytime to update to the latest version."
+echo -e "  Done! Trident ${GREEN}v${VERSION:-unknown}${NC} installed."
+echo "  Run again anytime to update to the latest version."
 echo ""
 echo "  Usage:"
 echo "    /tri new <description>     Start a design review"

@@ -61,7 +61,7 @@ Alternate which environment goes first to avoid ordering bias:
 
 **Experiment (B):**
 > `/tri new {task description from prompt.md}`
-> After SHIP IT: `/tri apply {task-slug}`
+> After READY: `/tri apply {task-slug}`
 
 ### Prohibited Actions
 

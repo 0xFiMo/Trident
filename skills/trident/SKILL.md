@@ -90,7 +90,31 @@ task(subagent_type="oracle", load_skills=[],
 @"trident-arbiter (agent)" ...
 ```
 
-**Domain skill selection:** Load skills that give D codebase-specific knowledge (e.g., `cpp-expert`). Only first round — continuation rounds use `load_skills=[]`.
+**Skill Stacking — augment all roles with domain expertise:**
+
+Generator SHOULD load relevant domain skills before starting design work.
+The same skills SHOULD be passed to Discriminator and Arbiter so all three
+roles share the same domain knowledge.
+
+| Role | How to load skills | When |
+|------|--------------------|------|
+| Generator | Use the Skill tool directly (e.g., `skill("cpp-expert")`) | Before starting `/tri new` |
+| Discriminator | Via `load_skills=["{skill}"]` when Generator fires the task | First round only — continuation rounds reuse session |
+| Arbiter | Via `load_skills=["{skill}"]` when Generator fires the task | Every invocation (Arbiter has no session) |
+
+Example: task involves React frontend
+```python
+# Generator loads skill for itself
+skill("frontend-patterns")
+
+# Generator passes same skill to Discriminator
+task(subagent_type="oracle", load_skills=["frontend-patterns"], ...)
+
+# Generator passes same skill to Arbiter
+task(subagent_type="oracle", load_skills=["frontend-patterns"], ...)
+```
+
+If no relevant domain skill exists, use `load_skills=[]`.
 
 **Session recovery:** If Discriminator's session expires, start fresh with `discriminator.md` content in prompt. See `reference/session-recovery.md`.
 
@@ -157,9 +181,19 @@ ALL must reach **≥ 9** to pass. No exceptions.
 
 ## 4. Design Workflow — `/tri new`
 
-### Step 1: Auto-Slug and Initialize
+### Step 1: Auto-Slug, Scan Skills, and Initialize
 
 Convert description to kebab-case. Do NOT ask user to confirm.
+
+**Skill Discovery (MANDATORY before design):**
+1. List all available skills on the platform
+2. Identify skills relevant to the task (e.g., web task → load `frontend-patterns`, `dev-browser`)
+3. Load matching skills for yourself (Generator)
+4. Record which skills to pass to Discriminator and Arbiter in generator.md Meta:
+   ```
+   - Skills: [frontend-patterns, dev-browser]
+   ```
+
 If `.trident/{task-slug}/` exists → continue. If not → create from templates.
 
 Load templates from `templates/generator-template.md` and `templates/discriminator-template.md`.
@@ -168,6 +202,14 @@ Load templates from `templates/generator-template.md` and `templates/discriminat
 
 Clear `.done`, fire Discriminator with prompt from `prompts/discriminator-first.md`, wait via heartbeat.
 See `reference/heartbeat.md` for platform-agnostic invocation.
+
+**Waiting for background agents — use in this priority order:**
+1. `bash heartbeat.sh {task-slug} 300` — blocks until `.done` appears (preferred)
+2. `background_output(block=true, timeout=300000)` — blocks until agent completes
+3. End your response and wait for `<system-reminder>` notification
+4. `background_output(block=false)` — last resort ONLY, max 3 attempts with 30s gap between each
+
+Do NOT loop `background_output(block=false)` rapidly. If you tried 3 times and it's still running, end your response and wait.
 
 ### Step 3: Process Feedback
 
@@ -383,6 +425,7 @@ Precondition: Status `done` (warn if `ready`, reject if `iterating`).
 | Skipping apply, implementing directly | Loses task tracking |
 | Attempting Round 4+ after failure | Three Strikes — escalate to user |
 | Arbiter every Discriminator round during `/tri new` | Expensive; mandatory only before READY |
+| Rapid polling `background_output(block=false)` | Wastes tokens, spams user screen. Max 3 attempts, then end response and wait |
 
 ---
 
