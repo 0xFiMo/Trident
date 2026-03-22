@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2026-03-22
+
+### Fixed
+- Generator template: Score History table started with v1-v4 columns causing agents to pre-fill empty tables — now starts with v1 only
+- Added "Score History Rules" in SKILL.md: exactly ONE table, add columns per version, never duplicate
+
 ## [1.0.2] - 2026-03-22
 
 ### Changed

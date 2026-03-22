@@ -11,18 +11,18 @@
 - Root Cause: {if applicable}
 - Status: iterating | ready | implementing | done
 - Current Version: v{N}
-- Score History:
+- Score History: (add columns as versions are scored — start with v1 only)
 
-| Dimension | v1 | v2 | ... |
-|-----------|----|----|-----|
-| Correctness | _ | _ | |
-| Algorithmic Soundness | _ | _ | |
-| Safety | _ | _ | |
-| Measurability | _ | _ | |
-| Minimality | _ | _ | |
-| Testability | _ | _ | |
-| Conventions | _ | _ | |
-| **Verdict** | | | |
+| Dimension | v1 |
+|-----------|:--:|
+| Correctness | |
+| Algorithmic Soundness | |
+| Safety | |
+| Measurability | |
+| Minimality | |
+| Testability | |
+| Conventions | |
+| **Verdict** | |
 
 ## Context for Review
 

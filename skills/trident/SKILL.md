@@ -217,6 +217,11 @@ Parse Discriminator output. Record scores in generator.md. Check gates.
 - NOT all ≥ 9 → iterate, re-submit with prompt from `prompts/discriminator-continuation.md`
 - All ≥ 9 → proceed to Arbiter Final Review
 
+**Score History Rules:**
+- generator.md MUST have exactly ONE Score History table — never duplicate
+- Start with v1 column only. Add columns as new versions are scored.
+- Update the SAME table — do NOT create a second table below
+
 ### Step 4: Arbiter (conditional mid-iteration)
 
 If triggered by conditions 3-5 above. Use prompt from `prompts/arbiter-design.md`.
