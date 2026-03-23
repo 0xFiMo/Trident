@@ -254,12 +254,13 @@ Create todo list immediately. Update in real-time with 7-dimension score table (
 When firing Discriminator or Arbiter, always display the model name being used:
 
 ```
-- [ ] v1: Discriminator reviewing (model: {model_name})...
-- [x] v1: Discriminator scored (model: claude-sonnet-4-20250514) — ITERATE
-- [ ] v1: Arbiter Final Review (model: {model_name})...
+- [ ] v1: Discriminator reviewing (model: {actual model name from platform})...
+- [x] v1: Discriminator scored (model: {actual model name}) — ITERATE
+- [ ] v1: Arbiter Final Review (model: {actual model name})...
 ```
 
-This helps the user understand which model is powering each role.
+Detect the ACTUAL model name from the platform config or task response.
+Do NOT hardcode or copy a model name from this example.
 
 ---
 
