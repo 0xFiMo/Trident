@@ -37,6 +37,27 @@ You are the **Generator** in a Trident Apply workflow. START WORKING IMMEDIATELY
 - If `Status: implementing`, resume from existing `tasks.md` and `apply-log.md`
 - If `Status: iterating`, reject: "Design not converged. Run `/tri new` to continue."
 
+## Progress Tracking (MANDATORY — use todo list, update in real-time)
+
+The user MUST see a live todo list. Update after EVERY step.
+
+```
+## Apply Phase (/tri apply)
+- [x] Round 1: Generator implements
+        - [x] Task 1/N: {file} — {description}
+        - [x] Task 2/N: {file} — {description}
+        - ...
+- [x] Round 1: Generator Build & Verify — ✅
+- [x] Round 1: Discriminator (model: xxx) scored — PASS/FAIL
+        | Dimension             | Score |
+        |-----------------------|-------|
+        | ...                   |       |
+- [x] Round 1: Arbiter (model: xxx) Final Review — PASS ✅
+- [x] Completion Report
+```
+
+Every todo item must show: which round, who is working, their model name, sub-tasks for implementation, score table after each evaluation.
+
 ## HARD STOP (non-negotiable)
 - After completion: output the Completion Report, then STOP.
 - Do NOT start `/tri archive` automatically — the user must invoke it.

@@ -30,6 +30,51 @@ Run `/tri new` then `/tri apply` automatically. User explicitly authorizes skipp
 
 3. **STOP and report** — wait for user to invoke `/tri archive`
 
+**Progress Tracking (MANDATORY — use todo list, update in real-time):**
+
+The user MUST see a live todo list throughout the entire process.
+Update it after EVERY step — mark `in_progress` when starting, `completed` when done.
+
+```
+# /tri auto — {task-slug}
+
+## Design Phase (/tri new)
+- [x] Skill Discovery: loaded [frontend-patterns]
+- [x] v1: Generator produces design
+- [x] v1: Discriminator (model: xxx) scored — ITERATE
+        | Dimension             | Score |
+        |-----------------------|-------|
+        | Correctness           |   7   | ← MUST FIX: ...
+        | ...                   |       |
+- [x] v2: Generator addresses Discriminator feedback
+- [x] v2: Discriminator (model: xxx) scored — all ≥ 9
+- [x] v2: Arbiter (model: xxx) Final Review — READY ✅
+- [x] Convergence Report produced
+
+## Apply Phase (/tri apply)
+- [x] Round 1: Generator implements
+        - [x] Task 1/4: {file} — {description}
+        - [x] Task 2/4: {file} — {description}
+        - [x] Task 3/4: {file} — {description}
+        - [x] Task 4/4: {file} — {description}
+- [x] Round 1: Generator Build & Verify — ✅
+- [x] Round 1: Discriminator (model: xxx) reviewing...
+- [x] Round 1: Discriminator scored — PASS
+- [x] Round 1: Arbiter (model: xxx) Final Review — PASS ✅
+- [ ] Completion Report
+
+## Done — waiting for /tri archive
+```
+
+Every todo item must show:
+- Which round (Round 1/2/3)
+- Who is working (Generator/Discriminator/Arbiter)
+- Their model name (self-identified)
+- Score table after every Discriminator/Arbiter evaluation
+- Sub-tasks for implementation (each file = one sub-task)
+
+Do NOT summarize or skip steps. The user wants to see every step happening.
+
 **Rules:**
 - Internal `.md` files MUST be in English
 - User-facing output MUST match the user's language
