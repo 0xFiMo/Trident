@@ -173,6 +173,7 @@ if $install_opencode; then
 
     copy_skill "$HOME/.config/opencode/skills/trident"
     copy_scripts "$HOME/.config/opencode/skills/trident/scripts"
+    copy_agents "$HOME/.config/opencode/agents"
 
     oc_cmd_dir="$HOME/.config/opencode/command"
     mkdir -p "$oc_cmd_dir"

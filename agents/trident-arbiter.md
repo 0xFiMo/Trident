@@ -1,9 +1,8 @@
 ---
 name: trident-arbiter
 description: "Trident Arbiter — independent evaluator that monitors Generator/Discriminator interaction quality. Always fresh, no prior context. Use when checking for collusion or score inflation in Trident reviews."
-tools: Read, Grep, Glob, Bash
-# model: inherits platform default
-color: yellow
+model: inherit
+mode: subagent
 ---
 
 <role>

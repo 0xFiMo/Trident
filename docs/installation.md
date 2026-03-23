@@ -67,6 +67,12 @@ mkdir -p ~/.config/opencode/skills/trident/scripts
 cp /tmp/trident/scripts/heartbeat.sh ~/.config/opencode/skills/trident/scripts/
 chmod +x ~/.config/opencode/skills/trident/scripts/heartbeat.sh
 
+# Agents (Generator + Discriminator + Arbiter)
+mkdir -p ~/.config/opencode/agents
+cp /tmp/trident/agents/trident-generator.md ~/.config/opencode/agents/
+cp /tmp/trident/agents/trident-discriminator.md ~/.config/opencode/agents/
+cp /tmp/trident/agents/trident-arbiter.md ~/.config/opencode/agents/
+
 # Command
 mkdir -p ~/.config/opencode/command
 cp /tmp/trident/commands/tri.md ~/.config/opencode/command/tri.md

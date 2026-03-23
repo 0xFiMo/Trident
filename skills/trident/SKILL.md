@@ -72,7 +72,7 @@ When Generator constructs a prompt for Discriminator or Arbiter, it MUST include
 **OpenCode:**
 ```python
 # Discriminator (first round — load domain skill)
-task(subagent_type="oracle", load_skills=["{domain-skill}"],
+task(subagent_type="trident-discriminator", load_skills=["{domain-skill}"],
      description="Trident Discriminator v{N}", prompt="...", run_in_background=true)
 
 # Discriminator (continuation — reuse session)
@@ -80,7 +80,7 @@ task(session_id="{stored_session_id}", load_skills=[],
      description="Trident Discriminator v{N}", prompt="...", run_in_background=true)
 
 # Arbiter (always fresh — NO session_id)
-task(subagent_type="oracle", load_skills=[],
+task(subagent_type="trident-arbiter", load_skills=[],
      description="Trident Arbiter review", prompt="...", run_in_background=true)
 ```
 
@@ -89,6 +89,9 @@ task(subagent_type="oracle", load_skills=[],
 @"trident-discriminator (agent)" ...
 @"trident-arbiter (agent)" ...
 ```
+
+All agents use `model: inherit` — they inherit your platform's default model.
+No surprise costs from mismatched model configurations.
 
 **Skill Stacking — augment all roles with domain expertise:**
 
@@ -108,10 +111,10 @@ Example: task involves React frontend
 skill("frontend-patterns")
 
 # Generator passes same skill to Discriminator
-task(subagent_type="oracle", load_skills=["frontend-patterns"], ...)
+task(subagent_type="trident-discriminator", load_skills=["frontend-patterns"], ...)
 
 # Generator passes same skill to Arbiter
-task(subagent_type="oracle", load_skills=["frontend-patterns"], ...)
+task(subagent_type="trident-arbiter", load_skills=["frontend-patterns"], ...)
 ```
 
 If no relevant domain skill exists, use `load_skills=[]`.

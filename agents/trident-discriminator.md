@@ -1,9 +1,8 @@
 ---
 name: trident-discriminator
 description: "Trident Discriminator — scores designs across 7 dimensions with accumulated codebase knowledge. Use when evaluating design proposals or verifying implementations in a Trident Design Review."
-tools: Read, Grep, Glob, Bash
-# model: inherits platform default
-color: red
+model: inherit
+mode: subagent
 ---
 
 <role>

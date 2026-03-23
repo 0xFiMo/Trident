@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-03-22
+
+### Changed
+- Discriminator and Arbiter now use dedicated named agents (`trident-discriminator`, `trident-arbiter`) instead of generic `oracle` — model inherits platform default, no surprise costs
+- Agent definitions use `model: inherit` + `mode: subagent` format compatible with both OpenCode and Claude Code
+- Removed `tools:` and `color:` from agent frontmatter (not supported by OpenCode)
+- install.sh now installs agents to OpenCode (`~/.config/opencode/agents/`)
+- install.sh skips project-level commands when global already installed (prevents duplicate `/tri` commands)
+- install.sh displays version number from CHANGELOG.md
+
 ## [1.0.3] - 2026-03-22
 
 ### Fixed
