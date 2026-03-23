@@ -1,7 +1,6 @@
 ---
 name: trident-discriminator
 description: "Trident Discriminator — scores designs across 7 dimensions with accumulated codebase knowledge. Use when evaluating design proposals or verifying implementations in a Trident Design Review."
-model: inherit
 mode: subagent
 ---
 
@@ -40,6 +39,9 @@ Your job: Evaluate the Generator's design OR verify implementation across exactl
 ## Output Format
 
 You MUST output in this exact format:
+
+### Model
+Ask yourself: "What model am I?" Report your actual model name.
 
 ### Verification Checklist
 Answer each item from generator.md's checklist with CONFIRMED/FAILED + evidence.

@@ -33,6 +33,10 @@ echo ""
 install_claude=false
 install_opencode=false
 install_project=false
+cli_model=""
+cli_g_model=""
+cli_d_model=""
+cli_a_model=""
 
 if [[ $# -gt 0 ]]; then
     for arg in "$@"; do
@@ -41,15 +45,27 @@ if [[ $# -gt 0 ]]; then
             --opencode) install_opencode=true ;;
             --project)  install_project=true ;;
             --all)      install_claude=true; install_opencode=true ;;
+            --model=*)  cli_model="${arg#--model=}" ;;
+            --generator-model=*)     cli_g_model="${arg#--generator-model=}" ;;
+            --discriminator-model=*) cli_d_model="${arg#--discriminator-model=}" ;;
+            --arbiter-model=*)       cli_a_model="${arg#--arbiter-model=}" ;;
             --help|-h)
                 echo "Usage: ./install.sh [OPTIONS]"
                 echo ""
                 echo "Options:"
-                echo "  --claude     Install for Claude Code (user-level)"
-                echo "  --opencode   Install for OpenCode (user-level)"
-                echo "  --project    Install into current project (.claude/)"
-                echo "  --all        Install for all supported platforms"
-                echo "  --help       Show this help"
+                echo "  --claude                     Install for Claude Code (user-level)"
+                echo "  --opencode                   Install for OpenCode (user-level)"
+                echo "  --project                    Install into current project (.claude/)"
+                echo "  --all                        Install for all supported platforms"
+                echo "  --model=MODEL                Set same model for all Trident agents"
+                echo "  --generator-model=MODEL      Set Generator model"
+                echo "  --discriminator-model=MODEL   Set Discriminator model"
+                echo "  --arbiter-model=MODEL        Set Arbiter model"
+                echo "  --help                       Show this help"
+                echo ""
+                echo "Examples:"
+                echo "  ./install.sh --opencode --model=minimax/MiniMax-M2.7"
+                echo "  ./install.sh --all --generator-model=minimax/MiniMax-M2.7 --discriminator-model=anthropic/claude-opus-4-6 --arbiter-model=anthropic/claude-opus-4-6"
                 echo ""
                 echo "If no options given, interactive mode is used."
                 exit 0
@@ -158,6 +174,28 @@ if $install_claude; then
     copy_agents "$HOME/.claude/agents"
     copy_commands "$HOME/.claude/commands/tri"
 
+    # Model configuration for Claude Code agents
+    if [[ -n "$cli_model" || -n "$cli_g_model" ]]; then
+        gm="${cli_g_model:-$cli_model}"
+        dm="${cli_d_model:-$cli_model}"
+        am="${cli_a_model:-$cli_model}"
+        claude_agents="$HOME/.claude/agents"
+        set_claude_model() {
+            local f="$1" m="$2"
+            if [[ -f "$f" ]] && ! grep -q '^model:' "$f"; then
+                sed -i "/^mode: subagent/a model: $m" "$f"
+            elif [[ -f "$f" ]]; then
+                sed -i "s|^model:.*|model: $m|" "$f"
+            fi
+        }
+        [[ -n "$gm" ]] && set_claude_model "$claude_agents/trident-generator.md" "$gm"
+        [[ -n "$dm" ]] && set_claude_model "$claude_agents/trident-discriminator.md" "$dm"
+        [[ -n "$am" ]] && set_claude_model "$claude_agents/trident-arbiter.md" "$am"
+        ok "Generator → $gm"
+        ok "Discriminator → $dm"
+        ok "Arbiter → $am"
+    fi
+
     ok "Claude Code ready."
     echo ""
 fi
@@ -182,6 +220,132 @@ if $install_opencode; then
         ok "Command → $oc_cmd_dir/tri.md"
     else
         warn "OpenCode command file (commands/tri.md) not found. Skipping."
+    fi
+
+    # If oh-my-opencode detected, inject model into agent .md files
+    omo_config="$HOME/.config/opencode/oh-my-opencode.json"
+    oc_config="$HOME/.config/opencode/opencode.json"
+    set_agent_model() {
+        local agent_file="$1" model="$2"
+        if [[ -f "$agent_file" ]] && ! grep -q '^model:' "$agent_file"; then
+            sed -i "/^mode: subagent/a model: $model" "$agent_file"
+        elif [[ -f "$agent_file" ]]; then
+            sed -i "s|^model:.*|model: $model|" "$agent_file"
+        fi
+    }
+
+    agents_dir="$HOME/.config/opencode/agents"
+
+    if [[ -f "$omo_config" ]]; then
+        info "oh-my-opencode detected."
+
+        # If CLI flags provided, skip interactive
+        if [[ -n "$cli_model" || -n "$cli_g_model" ]]; then
+            gm="${cli_g_model:-$cli_model}"
+            dm="${cli_d_model:-$cli_model}"
+            am="${cli_a_model:-$cli_model}"
+            [[ -n "$gm" ]] && set_agent_model "$agents_dir/trident-generator.md" "$gm"
+            [[ -n "$dm" ]] && set_agent_model "$agents_dir/trident-discriminator.md" "$dm"
+            [[ -n "$am" ]] && set_agent_model "$agents_dir/trident-arbiter.md" "$am"
+            ok "Generator → $gm"
+            ok "Discriminator → $dm"
+            ok "Arbiter → $am"
+        else
+
+        main_model=""
+        if [[ -f "$oc_config" ]]; then
+            main_model=$(grep '"model"' "$oc_config" 2>/dev/null | head -1 | sed 's/.*"model"[[:space:]]*:[[:space:]]*"//;s/".*//')
+        fi
+
+        available_models=""
+        if command -v opencode &>/dev/null; then
+            available_models=$(opencode models 2>/dev/null)
+        fi
+
+        model_list=()
+        if [[ -n "$main_model" ]]; then
+            model_list+=("$main_model")
+        fi
+        while IFS= read -r m; do
+            if [[ -n "$m" && "$m" != "$main_model" ]]; then
+                model_list+=("$m")
+            fi
+        done <<< "$available_models"
+
+        echo ""
+        echo "  Trident uses three AI roles:"
+        echo -e "    ${GREEN}Generator${NC}      — designs and implements code"
+        echo -e "    ${RED}Discriminator${NC}   — scores and reviews (the critic)"
+        echo -e "    ${YELLOW}Arbiter${NC}        — independent final check (prevents collusion)"
+        echo ""
+        echo "  Model configuration:"
+        echo "    1) Same model for all three roles"
+        echo "    2) Different model per role (e.g. cheap for Generator, strong for reviewers)"
+        echo "    0) Skip"
+        echo ""
+        echo -n "  Choose (press Enter for 1): "
+        read -r config_mode
+
+        pick_model() {
+            local role="$1"
+            local page=0 page_size=20 total=${#model_list[@]}
+            while true; do
+                local start=$((page * page_size))
+                local end=$((start + page_size))
+                [[ $end -gt $total ]] && end=$total
+
+                echo "" >&2
+                echo "  Select model for $role (${total} available):" >&2
+                for ((j=start; j<end; j++)); do
+                    local label="${model_list[$j]}"
+                    [[ "$label" == "$main_model" ]] && label="$label (current)"
+                    echo "    $((j+1))) $label" >&2
+                done
+                [[ $end -lt $total ]] && echo "    N) Next page" >&2
+                [[ $page -gt 0 ]] && echo "    P) Previous page" >&2
+                echo "    C) Enter custom model" >&2
+                echo -n "  Choose (press Enter for 1): " >&2
+                read -r pick
+                case "$pick" in
+                    [Nn]) page=$((page + 1)); continue ;;
+                    [Pp]) [[ $page -gt 0 ]] && page=$((page - 1)); continue ;;
+                    ""|1) echo "${model_list[0]:-$main_model}"; return ;;
+                    [Cc]) echo -n "  Model: " >&2; read -r cm; echo "$cm"; return ;;
+                    [0-9]*)
+                        local pi=$((pick - 1))
+                        if [[ $pi -lt $total ]]; then echo "${model_list[$pi]}"; return
+                        else echo -n "  Model: " >&2; read -r cm; echo "$cm"; return; fi ;;
+                    *) echo "$pick"; return ;;
+                esac
+            done
+        }
+
+        case "$config_mode" in
+            ""|1)
+                trident_model=$(pick_model "all Trident agents")
+                if [[ -n "$trident_model" ]]; then
+                    set_agent_model "$agents_dir/trident-generator.md" "$trident_model"
+                    set_agent_model "$agents_dir/trident-discriminator.md" "$trident_model"
+                    set_agent_model "$agents_dir/trident-arbiter.md" "$trident_model"
+                    ok "All Trident agents → $trident_model"
+                fi
+                ;;
+            2)
+                g_model=$(pick_model "Generator")
+                d_model=$(pick_model "Discriminator")
+                a_model=$(pick_model "Arbiter")
+                [[ -n "$g_model" ]] && set_agent_model "$agents_dir/trident-generator.md" "$g_model"
+                [[ -n "$d_model" ]] && set_agent_model "$agents_dir/trident-discriminator.md" "$d_model"
+                [[ -n "$a_model" ]] && set_agent_model "$agents_dir/trident-arbiter.md" "$a_model"
+                ok "Generator → $g_model"
+                ok "Discriminator → $d_model"
+                ok "Arbiter → $a_model"
+                ;;
+            0)
+                info "Skipped. Trident agents will use platform default (sisyphus-junior model)."
+                ;;
+        esac
+        fi
     fi
 
     ok "OpenCode ready."

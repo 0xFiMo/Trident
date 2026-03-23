@@ -16,6 +16,8 @@ Extract the subcommand from the user's input:
 | `/tri apply {task-slug}` | apply | Execute Section 8 |
 | `/tri status` | status | Execute Section 9 |
 | `/tri archive {task-slug}` | archive | Execute Section 10 |
+| `/tri models` | models | Show and configure models for Generator, Discriminator, Arbiter |
+| `/tri auto {description}` | auto | Full cycle: design + implement in one go, stop before archive |
 
 ## Execution Steps
 

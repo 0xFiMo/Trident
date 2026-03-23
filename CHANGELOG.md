@@ -2,15 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.4] - 2026-03-22
+## [1.0.4] - 2026-03-23
+
+### Added
+- `/tri auto` — full cycle (design + implement) in one command, stops before archive
+- `/tri models` — show and configure models for all three roles
+- `install.ps1` — Windows PowerShell installer
+- `arbiter.md` — Arbiter review log (Generator writes, Arbiter never reads, human auditable)
+- `arbiter-template.md` — template for arbiter.md
+- install.sh/ps1: per-role model selection with `--model=` and `--generator-model=` CLI flags
+- install.sh/ps1: oh-my-opencode detection with interactive model configuration
+- install.sh: paginated model list from `opencode models` (20 per page)
+- SKILL.md: skill stacking, build & verify, handoff protocol, verification fallback levels
 
 ### Changed
-- Discriminator and Arbiter now use dedicated named agents (`trident-discriminator`, `trident-arbiter`) instead of generic `oracle` — model inherits platform default, no surprise costs
-- Agent definitions use `model: inherit` + `mode: subagent` format compatible with both OpenCode and Claude Code
-- Removed `tools:` and `color:` from agent frontmatter (not supported by OpenCode)
-- install.sh now installs agents to OpenCode (`~/.config/opencode/agents/`)
-- install.sh skips project-level commands when global already installed (prevents duplicate `/tri` commands)
-- install.sh displays version number from CHANGELOG.md
+- SKILL.md split into core + on-demand subdirectories (81% smaller initial load)
+- Agents use dedicated named types instead of generic oracle
+- Agent definitions: cross-platform compatible (OpenCode + Claude Code)
+- All agent output formats include model self-identification
+- README: all Mermaid diagrams replaced with static PNG images
+- install.sh: zero Python dependency
+
+### Fixed
+- Score History duplicate table issue
+- Arbiter missing model self-identification in output
+- Remaining G/D/A abbreviations in agent definitions
 
 ## [1.0.3] - 2026-03-22
 

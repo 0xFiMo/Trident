@@ -28,15 +28,16 @@ Status lifecycle: `iterating` → `ready` → `implementing` → `done` → `arc
 |------|--------|------|----------------|
 | **Generator** | Persistent (main session) | `generator.md` | `/tri new`: design + iterate. `/tri apply`: implement. NEVER implement during `/tri new`. |
 | **Discriminator** | Session continuity | `discriminator.md` | Score 7 dimensions, accumulate knowledge, verify implementation |
-| **Arbiter** | None (fresh each time) | `.done` signal only | Monitor Generator/Discriminator quality, prevent collusion. MANDATORY before READY and before any PASS. |
+| **Arbiter** | None (fresh each time) | `arbiter.md` (log, never reads) + `.done` signal | Monitor Generator/Discriminator quality, prevent collusion. MANDATORY before READY and before any PASS. |
 
 ### Isolation Rules
 
 - Generator MUST NOT write to `discriminator.md`
-- Discriminator MUST NOT write to `generator.md`
-- Arbiter writes ONLY `.done` signal file (output recorded by Generator)
+- Generator MUST record Arbiter's output in `arbiter.md` after each Arbiter review
+- Discriminator MUST NOT write to `generator.md` or `arbiter.md`
+- Arbiter writes ONLY `.done` signal file — Arbiter NEVER reads `arbiter.md` (always fresh)
 
-### Handoff Protocol (G → D/A)
+### Handoff Protocol (Generator → Discriminator/Arbiter)
 
 When Generator constructs a prompt for Discriminator or Arbiter, it MUST include:
 
@@ -90,8 +91,33 @@ task(subagent_type="trident-arbiter", load_skills=[],
 @"trident-arbiter (agent)" ...
 ```
 
-All agents use `model: inherit` — they inherit your platform's default model.
-No surprise costs from mismatched model configurations.
+**Model configuration:**
+
+Discriminator and Arbiter may use a DIFFERENT model than Generator,
+depending on your platform's subagent routing:
+
+- **OpenCode (native):** subagents use platform default model
+- **OpenCode + oh-my-opencode:** subagents use `sisyphus-junior` model
+  (check `~/.config/opencode/oh-my-opencode.json` → `sisyphus-junior.model`)
+- **Claude Code:** uses model from agent definition or platform default
+
+To verify: check `discriminator.md` — Discriminator self-identifies its model there.
+
+**If Discriminator or Arbiter invocation fails:**
+
+Do NOT fall back to oracle or self-review — that violates Trident's adversarial design.
+Stop and report to user:
+
+```
+Discriminator/Arbiter invocation failed.
+Please check:
+1. Agent files installed: ~/.config/opencode/agents/trident-discriminator.md
+2. Agent files installed: ~/.claude/agents/trident-discriminator.md
+3. Run: ./install.sh to reinstall agents
+```
+
+Do NOT retry the same failing call more than once.
+Do NOT continue the workflow without Discriminator/Arbiter — the review is invalid without them.
 
 **Skill Stacking — augment all roles with domain expertise:**
 
@@ -199,7 +225,7 @@ Convert description to kebab-case. Do NOT ask user to confirm.
 
 If `.trident/{task-slug}/` exists → continue. If not → create from templates.
 
-Load templates from `templates/generator-template.md` and `templates/discriminator-template.md`.
+Load templates from `templates/generator-template.md`, `templates/discriminator-template.md`, and `templates/arbiter-template.md`.
 
 ### Step 2: Submit to Discriminator
 
@@ -219,6 +245,10 @@ Do NOT loop `background_output(block=false)` rapidly. If you tried 3 times and i
 Parse Discriminator output. Record scores in generator.md. Check gates.
 - NOT all ≥ 9 → iterate, re-submit with prompt from `prompts/discriminator-continuation.md`
 - All ≥ 9 → proceed to Arbiter Final Review
+
+**After receiving Discriminator/Arbiter results:**
+- Update generator.md `Models:` field with each role's self-identified model name
+- Example: `Models: Generator=MiniMax-M2.7, Discriminator=MiniMax-M2.7, Arbiter=MiniMax-M2.7`
 
 **Score History Rules:**
 - generator.md MUST have exactly ONE Score History table — never duplicate
@@ -251,16 +281,14 @@ Fire Arbiter with prompt from `prompts/arbiter-design.md`. Arbiter MUST create `
 
 Create todo list immediately. Update in real-time with 7-dimension score table (full names, no abbreviations) after every Discriminator/Arbiter evaluation.
 
-When firing Discriminator or Arbiter, always display the model name being used:
+Each role should self-identify its model name in progress tracking and working files.
+Ask yourself: "What model am I?" and record the answer.
 
 ```
-- [ ] v1: Discriminator reviewing (model: {actual model name from platform})...
-- [x] v1: Discriminator scored (model: {actual model name}) — ITERATE
-- [ ] v1: Arbiter Final Review (model: {actual model name})...
+- [ ] v1: Discriminator reviewing (model: {self-identified})...
+- [x] v1: Discriminator scored (model: {self-identified}) — ITERATE
+- [ ] v1: Arbiter Final Review (model: {self-identified})...
 ```
-
-Detect the ACTUAL model name from the platform config or task response.
-Do NOT hardcode or copy a model name from this example.
 
 ---
 
@@ -359,13 +387,20 @@ Todo list with 7-dimension score table after every Discriminator/Arbiter evaluat
 
 ---
 
-## 6. Status Workflow — `/tri status`
+## 6. Models Workflow — `/tri models`
+
+Show and configure models for Generator, Discriminator, and Arbiter.
+See `commands/tri/models.md` for full instructions.
+
+---
+
+## 7. Status Workflow — `/tri status`
 
 Scan `.trident/` (exclude `archive/`). Group by: In Progress vs Completed. List archived from `.trident/archive/`.
 
 ---
 
-## 7. Archive Workflow — `/tri archive`
+## 8. Archive Workflow — `/tri archive`
 
 Precondition: Status `done` (warn if `ready`, reject if `iterating`).
 
@@ -375,12 +410,13 @@ Precondition: Status `done` (warn if `ready`, reject if `iterating`).
 
 ---
 
-## 8. File Structure
+## 9. File Structure
 
 ```
 .trident/{task-slug}/
 ├── generator.md        ← Generator's design + versions + feedback
 ├── discriminator.md    ← Discriminator's accumulated knowledge
+├── arbiter.md          ← Arbiter's review log (read-only, Generator writes, Arbiter never reads)
 ├── tasks.md            ← Implementation tasks (/tri apply)
 ├── apply-log.md        ← Round log with scores
 └── .done               ← Signal file (transient)
@@ -388,14 +424,14 @@ Precondition: Status `done` (warn if `ready`, reject if `iterating`).
 
 ---
 
-## 9. Language Rules
+## 10. Language Rules
 
 - Internal files (generator.md, discriminator.md, etc.) → English ONLY
 - User-facing output (reports, summaries, todos) → match user's language
 
 ---
 
-## 10. Quick Reference
+## 11. Quick Reference
 
 | Command | Description |
 |---------|-------------|
@@ -403,6 +439,8 @@ Precondition: Status `done` (warn if `ready`, reject if `iterating`).
 | `/tri apply {task-slug}` | Implement with Three Strikes |
 | `/tri status` | Show active and completed tasks |
 | `/tri archive {task-slug}` | Archive completed task |
+| `/tri models` | Show and configure models for all roles |
+| `/tri auto {description}` | Full cycle: `/tri new` + `/tri apply` in one go |
 
 ### Convergence Checklist
 
@@ -421,7 +459,7 @@ Precondition: Status `done` (warn if `ready`, reject if `iterating`).
 
 ---
 
-## 11. Anti-Patterns
+## 12. Anti-Patterns
 
 | Anti-Pattern | Why It Fails |
 |-------------|-------------|
@@ -446,6 +484,7 @@ When you need templates, prompts, or reference material, load from:
 |------|------|
 | Create generator.md | `templates/generator-template.md` |
 | Create discriminator.md | `templates/discriminator-template.md` |
+| Create arbiter.md | `templates/arbiter-template.md` |
 | Create apply-log.md | `templates/apply-log-template.md` |
 | Fire Discriminator (first round) | `prompts/discriminator-first.md` |
 | Fire Discriminator (continuation) | `prompts/discriminator-continuation.md` |

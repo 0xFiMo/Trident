@@ -8,6 +8,7 @@
 - Task Type: {algorithm | refactoring | hotfix | new-feature}
 - User Language: {detected from user's input, e.g., zh-TW, en, ja}
 - Skills: [{list of domain skills loaded for this task, passed to Discriminator and Arbiter}]
+- Models: Generator={self-identify}, Discriminator={filled after D runs}, Arbiter={filled after A runs}
 - Root Cause: {if applicable}
 - Status: iterating | ready | implementing | done
 - Current Version: v{N}

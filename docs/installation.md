@@ -2,6 +2,31 @@
 
 This guide is designed for both humans and AI agents. Follow the steps for your platform.
 
+## For AI Agents: IMPORTANT
+
+Before running the installer, you MUST ask the user:
+
+1. **Which platform?** Claude Code, OpenCode, or both?
+2. **Which model for Trident agents?** Trident has three roles:
+   - `Generator` — designs and implements code
+   - `Discriminator` — scores and reviews (the critic)
+   - `Arbiter` — independent final check (prevents collusion)
+
+   Ask: "Do you want all three roles to use the same model, or different models per role?"
+
+3. Then run the installer with CLI flags (do NOT run interactively):
+
+```bash
+# Same model for all roles
+./install.sh --opencode --model=minimax/MiniMax-M2.7
+
+# Different model per role
+./install.sh --opencode \
+  --generator-model=minimax/MiniMax-M2.7 \
+  --discriminator-model=anthropic/claude-opus-4-6 \
+  --arbiter-model=anthropic/claude-opus-4-6
+```
+
 ## Prerequisites
 
 - `git` installed
@@ -77,6 +102,12 @@ cp /tmp/trident/agents/trident-arbiter.md ~/.config/opencode/agents/
 mkdir -p ~/.config/opencode/command
 cp /tmp/trident/commands/tri.md ~/.config/opencode/command/tri.md
 ```
+
+### If using oh-my-opencode
+
+No extra configuration needed. oh-my-opencode automatically discovers agents
+installed in `~/.config/opencode/agents/` and `.claude/agents/`.
+The installer already copies agent files to these locations.
 
 ### Option D: Project-Level (shared with team)
 

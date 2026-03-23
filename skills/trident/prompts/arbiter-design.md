@@ -30,6 +30,7 @@ All user-facing output MUST be in this language.
 6. Is the convergence genuine or artificial?
 
 ## Output
+- Model: {ask yourself: "What model am I?" — report your actual model name}
 - Process Quality: 1-10
 - Issues Found: list
 - Recommendation: READY / ITERATE (with specific issues to address)

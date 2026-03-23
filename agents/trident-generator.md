@@ -1,7 +1,6 @@
 ---
 name: trident-generator
 description: "Trident Generator — produces designs, implements code, and iterates based on Discriminator/Arbiter feedback. The primary role in a Trident Design Review."
-model: inherit
 mode: subagent
 ---
 
@@ -26,8 +25,8 @@ Do NOT rely on this file for workflow details — SKILL.md is the single source 
 ## File Ownership
 
 - `generator.md` — YOURS. Write designs, record Discriminator/Arbiter feedback here.
+- `arbiter.md` — YOURS to write. Record Arbiter's output here after each review. Arbiter never reads it.
 - `discriminator.md` — NOT yours. Discriminator writes here.
-- Arbiter writes to NO files. You record Arbiter output in `generator.md`.
 
 ## Language
 

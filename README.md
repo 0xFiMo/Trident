@@ -63,8 +63,13 @@ https://raw.githubusercontent.com/0xFiMo/trident/main/docs/installation.md
 Or just run the installer yourself:
 
 ```bash
+# Linux / macOS / WSL
 git clone https://github.com/0xFiMo/trident.git /tmp/trident
 cd /tmp/trident && ./install.sh
+
+# Windows (PowerShell)
+git clone https://github.com/0xFiMo/trident.git $env:TEMP\trident
+cd $env:TEMP\trident; .\install.ps1
 ```
 
 ### For AI Agents
@@ -102,37 +107,14 @@ curl -s https://raw.githubusercontent.com/0xFiMo/trident/main/docs/installation.
 | `/tri apply` | **Try** to build it. Three Strikes — 3 rounds of `Generator` + `Discriminator` + `Arbiter` verification. |
 | `/tri archive` | Done **try**ing. Archive it and extract what you learned. |
 | `/tri status` | Check what you're **try**ing and what's done. |
+| `/tri models` | Configure which models power each role. |
+| `/tri auto "description"` | Full cycle — design + implement in one go. |
 
 The lifecycle is strictly sequential. The agent cannot skip ahead:
 
-```mermaid
-flowchart LR
-    subgraph Design
-        A["/tri new"]
-    end
-    subgraph Build
-        B["/tri apply"]
-    end
-    subgraph Ship
-        C["/tri archive"]
-    end
-    subgraph Learn
-        D["Extract skill"]
-    end
-
-    A -- "ready" --> B
-    B -- "done" --> C
-    C -- "archived" --> D
-
-    style A fill:#1a1a2e,color:#e94560,stroke:#e94560,stroke-width:2px
-    style B fill:#1a1a2e,color:#f39c12,stroke:#f39c12,stroke-width:2px
-    style C fill:#1a1a2e,color:#2ecc71,stroke:#2ecc71,stroke-width:2px
-    style D fill:#1a1a2e,color:#a29bfe,stroke:#a29bfe,stroke-width:2px
-    style Design fill:#0f0f1a,color:#e94560,stroke:#e94560
-    style Build fill:#0f0f1a,color:#f39c12,stroke:#f39c12
-    style Ship fill:#0f0f1a,color:#2ecc71,stroke:#2ecc71
-    style Learn fill:#0f0f1a,color:#a29bfe,stroke:#a29bfe
-```
+<p align="center">
+  <img src="docs/asset/command.png" alt="Trident Command Lifecycle" width="700">
+</p>
 
 ---
 
@@ -144,21 +126,9 @@ Same model (`Kimi K2.5`). Same prompt. Same task. Only difference: one used Trid
 
 **With Trident** — `Discriminator` catches all 6 in adversarial review. Fixed before a single line ships.
 
-```mermaid
----
-config:
-  themeVariables:
-    xyChart:
-      plotColorPalette: "#e74c3c, #2ecc71"
----
-xychart-beta
-    title "Hidden Production Issues (lower is better)"
-    x-axis ["Encapsulation", "Input Valid.", "Immutable API", "Time Overflow", "Race Cond.", "API Design"]
-    y-axis "Issue Severity" 0 --> 10
-    bar [9, 9, 8, 8, 7, 6]
-    bar [0, 0, 0, 0, 0, 0]
-```
-> ![](https://placehold.co/12x12/e74c3c/e74c3c.png) Without Trident &nbsp;&nbsp; ![](https://placehold.co/12x12/2ecc71/2ecc71.png) With Trident
+<p align="center">
+  <img src="docs/asset/kimi_k2p5.png" alt="Benchmark — Hidden Production Issues" width="700">
+</p>
 
 **Tests catch logic bugs. Trident catches everything tests can't:**
 
@@ -183,18 +153,9 @@ https://github.com/user-attachments/assets/d23f7c70-97f5-476c-910e-252e0bcc722c
 
 ### The Triforce — Three Roles
 
-```mermaid
-graph LR
-    G["Generator"] -- "design" --> D["Discriminator"]
-    D -- "feedback" --> G
-    D -- "ready" --> A["Arbiter"]
-    A -- "pass" --> R(("Done"))
-
-    style G fill:#2ecc71,color:#fff,stroke:#27ae60
-    style D fill:#e74c3c,color:#fff,stroke:#c0392b
-    style A fill:#f1c40f,color:#1a1a2e,stroke:#f39c12
-    style R fill:#3498db,color:#fff,stroke:#2980b9
-```
+<p align="center">
+  <img src="docs/asset/triforce.png" alt="Triforce — Generator, Discriminator, Arbiter" width="600">
+</p>
 
 | Role | Analogy | Memory | What It Actually Does |
 |------|---------|--------|----------------------|
@@ -246,6 +207,36 @@ Done? Archive it. Trident moves the working files to `.trident/archive/` and ask
 > *"This review uncovered insights about [domain]. Want me to create a skill?"*
 
 If yes — the agent distills root causes, design decisions, and pitfalls into a reusable skill. Your agent gets smarter with every review.
+
+### Model Configuration (`/tri models`)
+
+Not all roles need the same brain. The `Generator` writes code — a fast, affordable model works fine. The `Discriminator` and `Arbiter` only review — a stronger model catches more issues. Use `/tri models` to configure each role independently:
+
+```
+/tri models
+
+  Trident Model Configuration:
+
+  | Role          | Job                             | Model                            |
+  |---------------|---------------------------------|----------------------------------|
+  | Generator     | designs and implements code     | minimax-coding-plan/MiniMax-M2.7 |
+  | Discriminator | scores and reviews (the critic) | anthropic/claude-opus-4-6        |
+  | Arbiter       | independent final check         | anthropic/claude-opus-4-6        |
+```
+
+This isn't just about cost — it's about **blind spot diversity**. If all three roles use the same model, they share the same weaknesses. A bug that one model can't see, all three will miss. Different models have different blind spots — what MiniMax overlooks, Claude might catch, and vice versa.
+
+### One Command, Full Cycle (`/tri auto`)
+
+Don't want to run `/tri new` and `/tri apply` separately? Use `/tri auto` — it runs the full design-to-implementation cycle in one go, then stops for you to review before archiving.
+
+```
+/tri auto "fix memory leak on disconnect"
+
+→ Design phase (Generator ↔ Discriminator ↔ Arbiter) → READY
+→ Implementation phase (Three Strikes) → Done
+→ Waits for you to /tri archive
+```
 
 ---
 

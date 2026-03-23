@@ -31,10 +31,12 @@ PASS — all >= 9
 4. Check for blind spots Discriminator may have missed
 5. Is the PASS verdict genuine?
 
+## Output
+- Model: {ask yourself: "What model am I?" — report your actual model name}
+- Verdict: PASS / FAIL (list issues)
+
 ## Signal Completion
 echo "VERDICT: PASS or FAIL" > .trident/{task-slug}/.done
-
-Verdict: PASS / FAIL (list issues)
 ```
 
 ## Round 3: Collaborative Review
@@ -78,8 +80,10 @@ Always NICE TO HAVE:
 
 Golden rule: if it can crash or produce incorrect behavior on ANY input -> MUST FIX.
 
+## Output
+- Model: {ask yourself: "What model am I?" — report your actual model name}
+- Verdict: PASS (all gates met) / FAIL (list issues for Generator to fix)
+
 ## Signal Completion
 echo "VERDICT: PASS or FAIL" > .trident/{task-slug}/.done
-
-Verdict: PASS (all gates met) / FAIL (list issues for Generator to fix)
 ```
