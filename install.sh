@@ -199,7 +199,12 @@ if $install_project; then
     copy_skill ".claude/skills/trident"
     copy_scripts ".claude/skills/trident/scripts"
     copy_agents ".claude/agents"
-    copy_commands ".claude/commands/tri"
+
+    if $install_claude; then
+        info "Skipping project-level commands — already installed globally."
+    else
+        copy_commands ".claude/commands/tri"
+    fi
 
     # Also install OpenCode skill + scripts into project if .opencode/ exists
     if [[ -d ".opencode" ]]; then
