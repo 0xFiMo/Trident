@@ -12,6 +12,9 @@
 
 > *"As iron sharpens iron, so one person sharpens another."* — Proverbs 27:17
 
+<p align="center">
+  <img src="docs/asset/trident_intro.png" alt="Trident Overview — Triforce, Dimension Gate, Three Strikes" width="700">
+</p>
 
 ### Why "Trident"?
 
@@ -41,11 +44,6 @@ The root cause: **an AI agent reviewing its own work is like a student grading t
 Trident turns one agent's monologue into a three-way adversarial review. The `Generator` builds. The `Discriminator` attacks. The `Arbiter` keeps them honest. Your code ships only when all three agree it's ready.
 
 Works with any model. Even non-tier-1 models produce senior-level output with Trident — because quality comes from the process, not just the model.
-
-
-<p align="center">
-  <img src="docs/asset/trident_intro.png" alt="Trident Overview — Triforce, Dimension Gate, Three Strikes" width="700">
-</p>
 
 ---
 
