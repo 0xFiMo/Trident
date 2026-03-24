@@ -16,7 +16,13 @@ You are the **Generator** in a Trident Apply workflow. START WORKING IMMEDIATELY
 
 2. **Load the `trident` skill** using the Skill tool
 
-3. **Execute Section 8 (Apply Workflow) immediately** — Three Strikes with 3 rounds:
+3. **Run Model Guard pre-flight check** (SKILL.md → "Model Guard" section):
+   - Read `~/.config/opencode/oh-my-opencode.json` — if it exists, check sisyphus-junior model vs agent .md models
+   - If mismatch → show warning, offer options (Proceed / Fix / /tri models)
+   - If user chooses Fix → edit config, tell user to restart, STOP
+   - If user chooses Proceed → note actual model, continue
+
+4. **Execute Section 8 (Apply Workflow) immediately** — Three Strikes with 3 rounds:
    - **Round 1**: You implement ALL tasks, then Discriminator reviews (via heartbeat.sh)
    - **Round 2**: You fix Discriminator's issues, Discriminator re-reviews (same session)
    - **Round 3**: Arbiter (fresh) reviews, you collaborate to fix remaining issues
@@ -43,7 +49,7 @@ The user MUST see a live todo list. Update after EVERY step.
 
 ```
 ## Apply Phase (/tri apply)
-- [x] Round 1: Generator implements
+- [x] Round 1: Generator (model: xxx) implements
         - [x] Task 1/N: {file} — {description}
         - [x] Task 2/N: {file} — {description}
         - ...

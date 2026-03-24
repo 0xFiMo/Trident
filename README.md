@@ -44,7 +44,7 @@ Works with any model. Even non-tier-1 models produce senior-level output with Tr
 
 
 <p align="center">
-  <img src="docs/asset/trident_intro.png" alt="Trident Overview — Triforce, 7-Dimension Gate, Three Strikes" width="700">
+  <img src="docs/asset/trident_intro.png" alt="Trident Overview — Triforce, Dimension Gate, Three Strikes" width="700">
 </p>
 
 ---
@@ -103,7 +103,7 @@ curl -s https://raw.githubusercontent.com/0xFiMo/trident/main/docs/installation.
 
 | Command | What It Does |
 |---------|-------------|
-| `/tri new "description"` | **Try** a new design. `Generator` designs, `Discriminator` scores, `Arbiter` verifies. Iterates until all 7 dimensions >= 9. |
+| `/tri new "description"` | **Try** a new design. `Generator` designs, `Discriminator` scores, `Arbiter` verifies. Iterates until all dimensions >= 9. |
 | `/tri apply` | **Try** to build it. Three Strikes — 3 rounds of `Generator` + `Discriminator` + `Arbiter` verification. |
 | `/tri archive` | Done **try**ing. Archive it and extract what you learned. |
 | `/tri status` | Check what you're **try**ing and what's done. |
@@ -160,30 +160,35 @@ https://github.com/user-attachments/assets/d23f7c70-97f5-476c-910e-252e0bcc722c
 | Role | Analogy | Memory | What It Actually Does |
 |------|---------|--------|----------------------|
 | `Generator` | GAN Generator | Persistent | Explores codebase. Produces designs with root cause analysis, state transition tables, change surface estimates. Implements code. Self-audits against its own spec. |
-| `Discriminator` | GAN Discriminator | Session continuity | Scores every design across 7 dimensions. Cites specific methods, line numbers, data flow. Classifies issues as MUST FIX or NICE TO HAVE. Accumulates knowledge — never re-checks what it already verified. |
+| `Discriminator` | GAN Discriminator | Session continuity | Scores every design across all applicable dimensions. Cites specific methods, line numbers, data flow. Classifies issues as MUST FIX or NICE TO HAVE. Accumulates knowledge — never re-checks what it already verified. |
 | `Arbiter` | Independent evaluator | None (always fresh) | Zero context, zero bias. Checks if `Generator` and `Discriminator` are colluding. Catches blind spots neither addressed. Can override READY if convergence looks artificial. |
 
 **Why three, not two?** A `Generator` + `Discriminator` pair converges too easily. The `Discriminator` gets lenient after watching the `Generator` improve. The `Arbiter` prevents this — fresh every time, no sympathy.
 
-### Seven Dimensions
+### Scoring Dimensions
 
-Every design is scored across 7 dimensions. **All must reach >= 9/10 score:**
+Every design is scored across 5 core dimensions. **All must reach >= 9/10:**
 
 | Dimension | What It Measures |
 |-----------|-----------------|
-| Correctness | Logic correct, no crash on any input |
-| Algorithmic Soundness | All scenarios, boundaries, interactions |
+| Correctness | Logic correct, all scenarios, boundaries, no crash on any input |
 | Safety | Defensive input validation, fail-safe, backward compat |
-| Measurability | Verification coverage with available resources |
+| Testability | Test coverage, edge cases, verification coverage |
 | Minimality | Minimal change surface |
-| Testability | Test coverage, edge cases |
 | Conventions | Matches existing codebase patterns |
+
+For tasks that produce **visual output** (HTML, CSS, UI, animations), two additional dimensions apply:
+
+| Dimension | What It Measures |
+|-----------|-----------------|
+| Visual Quality | Aesthetics, animation smoothness, color coherence, responsive behavior |
+| Creative Impact | Originality, memorability, avoids generic template output |
 
 Missing input validation? **MUST FIX**, never NICE TO HAVE. If any input can crash your code, Safety cannot be >= 9/10.
 
 ### Design Phase (`/tri new`)
 
-`Generator` and `Discriminator` iterate until all 7 dimensions pass. No round limit.
+`Generator` and `Discriminator` iterate until all applicable dimensions pass. No round limit.
 
 
 ### Implementation Phase (`/tri apply`)
@@ -264,7 +269,7 @@ These files serve three purposes at once:
 ├── generator.md        ← Generator's memory: design + version history + feedback
 ├── discriminator.md    ← Discriminator's memory: verified facts, patterns, blind spots
 ├── tasks.md            ← Implementation checklist (created by /tri apply)
-├── apply-log.md        ← Round log with 7-dimension scores
+├── apply-log.md        ← Round log with dimension scores
 └── .done               ← Signal file for background agent completion
 ```
 

@@ -16,7 +16,13 @@ You are the **Generator** in a Trident Design Review. START WORKING IMMEDIATELY.
 
 2. **Load the `trident` skill** using the Skill tool
 
-3. **Execute Section 7 (Design Workflow) immediately**:
+3. **Run Model Guard pre-flight check** (SKILL.md → "Model Guard" section):
+   - Read `~/.config/opencode/oh-my-opencode.json` — if it exists, check sisyphus-junior model vs agent .md models
+   - If mismatch → show warning, offer options (Proceed / Fix / /tri models)
+   - If user chooses Fix → edit config, tell user to restart, STOP
+   - If user chooses Proceed → note actual model, continue
+
+4. **Execute Section 7 (Design Workflow) immediately**:
    - If `.trident/{task-slug}/` does NOT exist → create new, initialize files, produce v1 design
    - If `.trident/{task-slug}/` already exists → read current state, continue from where it left off
 
@@ -43,12 +49,12 @@ The user MUST see a live todo list. Update after EVERY step.
 ```
 ## Design Phase (/tri new)
 - [x] Skill Discovery: loaded [{skills}]
-- [x] v1: Generator produces design
+- [x] v1: Generator (model: xxx) produces design
 - [x] v1: Discriminator (model: xxx) scored — ITERATE
         | Dimension             | Score |
         |-----------------------|-------|
         | ...                   |       |
-- [x] v2: Generator addresses feedback
+- [x] v2: Generator (model: xxx) addresses feedback
 - [x] v2: Discriminator (model: xxx) scored — all ≥ 9
 - [x] v2: Arbiter (model: xxx) Final Review — READY ✅
 - [x] Convergence Report produced

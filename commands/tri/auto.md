@@ -13,14 +13,20 @@ Run `/tri new` then `/tri apply` automatically. User explicitly authorizes skipp
 
 **Steps**
 
-1. **Execute `/tri new` workflow** (Section 4 of SKILL.md)
+1. **Run Model Guard pre-flight check** (SKILL.md → "Model Guard" section):
+   - Read `~/.config/opencode/oh-my-opencode.json` — if it exists, check sisyphus-junior model vs agent .md models
+   - If mismatch → show warning, offer options (Proceed / Fix / /tri models)
+   - If user chooses Fix → edit config, tell user to restart, STOP
+   - If user chooses Proceed → note actual model, continue
+
+2. **Execute `/tri new` workflow** (Section 4 of SKILL.md)
    - Auto-slugify the description
    - Full design iteration: Generator ↔ Discriminator ↔ Arbiter
    - Continue until all 7 dimensions ≥ 9 AND Arbiter approves
    - Produce Convergence Report
    - Status → `ready`
 
-2. **Immediately execute `/tri apply` workflow** (Section 5 of SKILL.md)
+3. **Immediately execute `/tri apply` workflow** (Section 5 of SKILL.md)
    - Do NOT wait for user to invoke `/tri apply` — this is the purpose of `/tri auto`
    - Generate tasks.md + apply-log.md
    - Three Strikes: Round 1 → Round 2 → Round 3
@@ -28,7 +34,7 @@ Run `/tri new` then `/tri apply` automatically. User explicitly authorizes skipp
    - Produce Completion Report
    - Status → `done`
 
-3. **STOP and report** — wait for user to invoke `/tri archive`
+4. **STOP and report** — wait for user to invoke `/tri archive`
 
 **Progress Tracking (MANDATORY — use todo list, update in real-time):**
 
@@ -40,19 +46,19 @@ Update it after EVERY step — mark `in_progress` when starting, `completed` whe
 
 ## Design Phase (/tri new)
 - [x] Skill Discovery: loaded [frontend-patterns]
-- [x] v1: Generator produces design
+- [x] v1: Generator (model: xxx) produces design
 - [x] v1: Discriminator (model: xxx) scored — ITERATE
         | Dimension             | Score |
         |-----------------------|-------|
         | Correctness           |   7   | ← MUST FIX: ...
         | ...                   |       |
-- [x] v2: Generator addresses Discriminator feedback
+- [x] v2: Generator (model: xxx) addresses Discriminator feedback
 - [x] v2: Discriminator (model: xxx) scored — all ≥ 9
 - [x] v2: Arbiter (model: xxx) Final Review — READY ✅
 - [x] Convergence Report produced
 
 ## Apply Phase (/tri apply)
-- [x] Round 1: Generator implements
+- [x] Round 1: Generator (model: xxx) implements
         - [x] Task 1/4: {file} — {description}
         - [x] Task 2/4: {file} — {description}
         - [x] Task 3/4: {file} — {description}

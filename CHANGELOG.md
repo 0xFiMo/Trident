@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-03-24
+
+### Added
+- Model Guard — detects oh-my-opencode model override issues before any Trident command
+- Visual dimensions: Visual Quality + Creative Impact (conditional, visual tasks only)
+- `/tri models` selectable model menu (no more manual typing)
+
+### Changed
+- Dimensions merged: 7 → 5 core + 2 visual. Non-visual tasks converge faster
+- Heartbeat mandatory at all wait points (previously only first Discriminator submission)
+- Iterate loop is one atomic action — no stalling between fix and re-submit
+- Generator shows model name in progress tracking
+- `/tri models` platform-isolated (no cross-platform display)
+
+### Fixed
+- Generator stalling after receiving Discriminator feedback
+- Missing heartbeat during iterate rounds and Arbiter reviews
+
 ## [1.0.4] - 2026-03-23
 
 ### Added

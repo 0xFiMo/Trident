@@ -5,7 +5,9 @@
 
 ## Meta
 - Task: {bug/feature description}
-- Task Type: {algorithm | refactoring | hotfix | new-feature}
+- Task Type: {algorithm | refactoring | hotfix | new-feature | frontend | ui | animation | design}
+- Visual Task: {yes | no} — determines whether Visual Quality and Creative Impact dimensions apply
+- Applicable Dimensions: {5 core | 5 core + 2 visual}
 - User Language: {detected from user's input, e.g., zh-TW, en, ja}
 - Skills: [{list of domain skills loaded for this task, passed to Discriminator and Arbiter}]
 - Models: Generator={self-identify}, Discriminator={filled after D runs}, Arbiter={filled after A runs}
@@ -17,13 +19,15 @@
 | Dimension | v1 |
 |-----------|:--:|
 | Correctness | |
-| Algorithmic Soundness | |
 | Safety | |
-| Measurability | |
-| Minimality | |
 | Testability | |
+| Minimality | |
 | Conventions | |
+| Visual Quality | |
+| Creative Impact | |
 | **Verdict** | |
+
+(If Visual Task = no, remove Visual Quality and Creative Impact rows from the table.)
 
 ## Context for Review
 
